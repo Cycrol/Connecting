@@ -261,12 +261,12 @@
           g.lineStyle(18, 0xfad3e1, 0.95);
           g.beginPath();
           g.moveTo(start.x, start.y);
-          g.quadraticCurveTo(control.x, control.y, end.x, end.y);
+          g.quadraticBezierTo(control.x, control.y, end.x, end.y);
           g.strokePath();
           g.lineStyle(10, 0x111111, 0.15);
           g.beginPath();
           g.moveTo(start.x, start.y);
-          g.quadraticCurveTo(control.x, control.y, end.x, end.y);
+          g.quadraticBezierTo(control.x, control.y, end.x, end.y);
           g.strokePath();
           if (this.pulse > 0) {
             g.fillStyle(0xffffff, 0.6 * this.pulse);
