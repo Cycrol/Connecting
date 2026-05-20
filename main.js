@@ -259,15 +259,9 @@
           const control = this.lerpPoint(start, end, 0.5);
           control.y -= 36 + Phaser.Math.Distance.BetweenPoints(start, end) * 0.08;
           g.lineStyle(18, 0xfad3e1, 0.95);
-          g.beginPath();
-          g.moveTo(start.x, start.y);
-          g.quadraticBezierTo(control.x, control.y, end.x, end.y);
-          g.strokePath();
+          this.drawQuadraticCurve(g, start, control, end);
           g.lineStyle(10, 0x111111, 0.15);
-          g.beginPath();
-          g.moveTo(start.x, start.y);
-          g.quadraticBezierTo(control.x, control.y, end.x, end.y);
-          g.strokePath();
+          this.drawQuadraticCurve(g, start, control, end);
           if (this.pulse > 0) {
             g.fillStyle(0xffffff, 0.6 * this.pulse);
             g.fillCircle(end.x, end.y, 10 + 18 * this.pulse);
@@ -284,12 +278,22 @@
           control.y -= 24;
           const alpha = this.releaseProgress * 0.7;
           g.lineStyle(16, 0xfad3e1, alpha);
-          g.beginPath();
-          g.moveTo(start.x, start.y);
-          g.quadraticCurveTo(control.x, control.y, end.x, end.y);
-          g.strokePath();
+          this.drawQuadraticCurve(g, start, control, end);
           this.releaseProgress = Math.max(0, this.releaseProgress - delta * 0.0025);
         }
+      }
+
+      drawQuadraticCurve(g, start, control, end, segments = 24) {
+        g.beginPath();
+        g.moveTo(start.x, start.y);
+        for (let i = 1; i <= segments; i++) {
+          const t = i / segments;
+          const u = 1 - t;
+          const x = u * u * start.x + 2 * u * t * control.x + t * t * end.x;
+          const y = u * u * start.y + 2 * u * t * control.y + t * t * end.y;
+          g.lineTo(x, y);
+        }
+        g.strokePath();
       }
 
       lerpPoint(a, b, t) {
