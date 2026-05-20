@@ -71,6 +71,33 @@
         const scaleX = 1 - motion * 0.22 + breath * 0.14;
         const scaleY = 1 + motion * 0.5 - breath * 0.08;
 
+        const width = this.scene.scale.width;
+        const height = this.scene.scale.height;
+        const minX = this.radius;
+        const maxX = width - this.radius;
+        const minY = this.radius;
+        const maxY = height - this.radius;
+        let x = this.body.position.x;
+        let y = this.body.position.y;
+
+        if (x < minX) {
+          x = minX;
+        } else if (x > maxX) {
+          x = maxX;
+        }
+
+        if (y < minY) {
+          y = minY;
+        } else if (y > maxY) {
+          y = maxY;
+        }
+
+        if (x !== this.body.position.x || y !== this.body.position.y) {
+          this.scene.matter.body.setPosition(this.body, { x, y });
+          this.body.velocity.x = 0;
+          this.body.velocity.y = 0;
+        }
+
         this.container.setPosition(this.body.position.x, this.body.position.y);
         this.container.setScale(scaleX, scaleY);
 
@@ -286,6 +313,10 @@
         const height = this.scale.height;
         this.cameras.main.setBackgroundColor('#ffffff');
         this.matter.world.setBounds(0, 0, width, height, 32, true, true, true, true);
+        this.scale.on('resize', (gameSize) => {
+          const { width, height } = gameSize;
+          this.matter.world.setBounds(0, 0, width, height, 32, true, true, true, true);
+        });
         this.matter.add.rectangle(width * 0.5, height - 28, width * 0.9, 48, {
           isStatic: true,
           friction: 0.8,
