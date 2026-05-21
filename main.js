@@ -31,38 +31,54 @@
       }
 
       createBody(x, y, label) {
+        const group = Phaser.Physics.Matter.Matter.Body.nextGroup(true);
+
         this.body = this.scene.matter.add.circle(x, y, this.radius * 0.86, {
           frictionAir: 0.08,
-          restitution: 0.78,
+          restitution: 0.4,
           friction: 0.06,
-          density: 0.0019
+          density: 0.0019,
+          collisionFilter: { group }
         });
         this.body.label = label;
+
+        const plugX = x + this.plugSide * (this.radius * 1.35);
+        const socketX = x + this.socketSide * (this.radius * 1.35);
+
+        this.plugBody = this.scene.matter.add.circle(plugX, y, 14, {
+          frictionAir: 0.12,
+          restitution: 0.5,
+          friction: 0.03,
+          density: 0.0012,
+          collisionFilter: { group }
+        });
+        this.plugBody.label = label + '_plug';
+
+        this.socketBody = this.scene.matter.add.circle(socketX, y, 14, {
+          frictionAir: 0.12,
+          restitution: 0.5,
+          friction: 0.03,
+          density: 0.0012,
+          collisionFilter: { group }
+        });
+        this.socketBody.label = label + '_socket';
+
+        this.scene.matter.add.constraint(this.body, this.plugBody, this.radius * 1.35, 0.08, {
+          damping: 0.05
+        });
+        this.scene.matter.add.constraint(this.body, this.socketBody, this.radius * 1.35, 0.08, {
+          damping: 0.05
+        });
+
         Object.assign(this.body, { gameObject: this.container });
       }
 
-      get plugLocal() {
-        return new Phaser.Math.Vector2(this.plugSide * (this.radius * 0.94), 2);
-      }
-
-      get socketLocal() {
-        return new Phaser.Math.Vector2(this.socketSide * (this.radius * 0.72), 2);
-      }
-
       get plugPoint() {
-        const local = this.plugLocal;
-        return new Phaser.Math.Vector2(
-          this.body.position.x + local.x * this.container.scaleX,
-          this.body.position.y + local.y * this.container.scaleY
-        );
+        return new Phaser.Math.Vector2(this.plugBody.position.x, this.plugBody.position.y);
       }
 
       get socketPoint() {
-        const local = this.socketLocal;
-        return new Phaser.Math.Vector2(
-          this.body.position.x + local.x * this.container.scaleX,
-          this.body.position.y + local.y * this.container.scaleY
-        );
+        return new Phaser.Math.Vector2(this.socketBody.position.x, this.socketBody.position.y);
       }
 
       update(time, delta) {
@@ -109,6 +125,14 @@
       }
 
       drawBlob() {
+        const mainPos = this.body.position;
+        const plugPos = this.plugBody.position;
+        const socketPos = this.socketBody.position;
+        const plugOffsetX = plugPos.x - mainPos.x;
+        const plugOffsetY = plugPos.y - mainPos.y;
+        const socketOffsetX = socketPos.x - mainPos.x;
+        const socketOffsetY = socketPos.y - mainPos.y;
+
         this.graphics.clear();
         this.graphics.fillStyle(0x111111, 0.08);
         this.graphics.fillEllipse(0, this.radius * 0.62, this.radius * 1.4, 16);
@@ -120,25 +144,31 @@
         this.graphics.fillCircle(14, -18, 18);
         this.graphics.fillCircle(18, 20, 16);
 
-        const plugX = this.plugSide * (this.radius * 0.92);
         this.graphics.lineStyle(10, 0x111111, 1);
         this.graphics.beginPath();
-        this.graphics.moveTo(this.plugSide * 18, 10);
-        this.graphics.lineTo(plugX - this.plugSide * 6, 0);
+        this.graphics.moveTo(18 * this.plugSide, 10);
+        this.graphics.lineTo(plugOffsetX, plugOffsetY);
         this.graphics.strokePath();
 
         this.graphics.fillStyle(0xffffff, 1);
-        this.graphics.fillCircle(plugX, 0, 12);
+        this.graphics.fillCircle(plugOffsetX, plugOffsetY, 14);
         this.graphics.lineStyle(4, 0x111111, 1);
-        this.graphics.strokeCircle(plugX, 0, 12);
+        this.graphics.strokeCircle(plugOffsetX, plugOffsetY, 14);
+        this.graphics.fillStyle(this.accent, 1);
+        this.graphics.fillCircle(plugOffsetX, plugOffsetY, 8);
 
-        const socketX = this.socketSide * (this.radius * 0.72);
+        this.graphics.lineStyle(10, 0x111111, 1);
+        this.graphics.beginPath();
+        this.graphics.moveTo(0, 0);
+        this.graphics.lineTo(socketOffsetX, socketOffsetY);
+        this.graphics.strokePath();
+
         this.graphics.fillStyle(0xffffff, 1);
-        this.graphics.fillCircle(socketX, 0, 16);
+        this.graphics.fillCircle(socketOffsetX, socketOffsetY, 16);
         this.graphics.lineStyle(6, 0x111111, 1);
-        this.graphics.strokeCircle(socketX, 0, 16);
+        this.graphics.strokeCircle(socketOffsetX, socketOffsetY, 16);
         this.graphics.lineStyle(5, this.accent, 1);
-        this.graphics.strokeCircle(socketX, 0, 10);
+        this.graphics.strokeCircle(socketOffsetX, socketOffsetY, 10);
 
         this.graphics.fillStyle(0x111111, 1);
         this.graphics.fillCircle(-12, -14, 5);
@@ -149,7 +179,7 @@
         if (this.pulse > 0) {
           const alpha = this.pulse * 0.6;
           this.graphics.fillStyle(this.accent, alpha);
-          this.graphics.fillCircle(plugX, 0, 18 + this.pulse * 8);
+          this.graphics.fillCircle(plugOffsetX, plugOffsetY, 18 + this.pulse * 8);
         }
       }
 
@@ -177,7 +207,7 @@
 
       update(time, delta) {
         const target = this.findClosestLink();
-        const canSnap = target && target.distance < 48;
+        const canSnap = target && target.distance < 64;
         if (!this.connection && canSnap && this.snapCooldown <= 0) {
           this.connect(target.from, target.to);
         }
@@ -213,16 +243,15 @@
         this.activeFrom = from;
         this.activeTo = to;
         this.connection = this.scene.matter.add.constraint(
-          from.body,
-          to.body,
+          from.plugBody,
+          to.socketBody,
           0,
-          0.008,
+          0.08,
           {
-            pointA: { x: from.plugLocal.x, y: from.plugLocal.y },
-            pointB: { x: to.socketLocal.x, y: to.socketLocal.y }
+            damping: 0.04
           }
         );
-        const force = 0.036;
+        const force = 0.006;
         this.scene.matter.applyForce(
           from.body,
           { x: from.body.position.x, y: from.body.position.y },
@@ -344,14 +373,53 @@
           label: 'blueBlob'
         });
         this.connectionSystem = new ConnectionSystem(this, this.blobA, this.blobB);
-        this.matter.add.pointerConstraint({
-          constraint: {
-            stiffness: 0.02,
-            angularStiffness: 0.25,
-            damping: 0.18,
-            render: { visible: false }
-          },
-          label: 'dragConstraint'
+        this.createDragHandlers();
+      }
+
+      createDragHandlers() {
+        const Matter = Phaser.Physics.Matter.Matter;
+        const world = this.matter.world.localWorld;
+
+        this.input.on('pointerdown', pointer => {
+          const bodies = Matter.Query.point(world.bodies, pointer.position);
+          if (!bodies || bodies.length === 0) {
+            return;
+          }
+
+          const targetBody = bodies.find(body => {
+            return body.label && (body.label.endsWith('_plug') || body.label.endsWith('_socket'));
+          });
+
+          if (!targetBody) {
+            return;
+          }
+
+          this.dragConstraint = Matter.Constraint.create({
+            bodyA: targetBody,
+            pointB: { x: pointer.position.x, y: pointer.position.y },
+            pointA: { x: 0, y: 0 },
+            stiffness: 0.08,
+            damping: 0.5,
+            length: 0
+          });
+
+          Matter.World.add(world, this.dragConstraint);
+        });
+
+        this.input.on('pointermove', pointer => {
+          if (!this.dragConstraint) {
+            return;
+          }
+          this.dragConstraint.pointB.x = pointer.position.x;
+          this.dragConstraint.pointB.y = pointer.position.y;
+        });
+
+        this.input.on('pointerup', () => {
+          if (!this.dragConstraint) {
+            return;
+          }
+          Matter.World.remove(world, this.dragConstraint);
+          this.dragConstraint = null;
         });
       }
 
