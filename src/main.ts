@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import MainScene from './scenes/MainScene';
+import Chapter1Scene from './levels/Chapter1Scene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -10,11 +11,14 @@ const config: Phaser.Types.Core.GameConfig = {
   physics: {
     default: 'matter',
     matter: {
-      gravity: { y: 0.9 },
-      debug: false
+      gravity: { x: 0, y: 0 },
+      debug: false,
+      enableSleeping: false,
+      positionIterations: 6,
+      velocityIterations: 4
     }
   },
-  scene: [MainScene],
+  scene: [MainScene, Chapter1Scene],
   scale: {
     mode: Phaser.Scale.ScaleModes.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH

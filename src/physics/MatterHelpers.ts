@@ -10,3 +10,8 @@ export function lerpPoint(
     Phaser.Math.Linear(a.y, b.y, t)
   );
 }
+
+export function clampPoint(value: Phaser.Math.Vector2, min: number, max: number) {
+  const length = Phaser.Math.Clamp(value.length(), min, max);
+  return value.normalize().scale(length);
+}

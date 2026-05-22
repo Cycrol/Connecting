@@ -1,12 +1,6 @@
 import Phaser from 'phaser';
-import { BlobPerson } from '../entities/BlobPerson';
-import { ConnectionSystem } from '../systems/ConnectionSystem';
 
 export default class MainScene extends Phaser.Scene {
-  private blobA!: BlobPerson;
-  private blobB!: BlobPerson;
-  private connectionSystem!: ConnectionSystem;
-
   constructor() {
     super('MainScene');
   }
@@ -14,50 +8,50 @@ export default class MainScene extends Phaser.Scene {
   create() {
     const width = this.scale.width;
     const height = this.scale.height;
+    const titleStyle = {
+      fontFamily: 'Helvetica, Arial, sans-serif',
+      fontSize: '54px',
+      color: '#111111',
+      align: 'center' as const,
+      fontStyle: '700'
+    };
 
     this.cameras.main.setBackgroundColor('#ffffff');
-    this.matter.world.setBounds(0, 0, width, height, 32, true, true, true, true);
-    this.matter.add.rectangle(width * 0.5, height - 28, width * 0.9, 48, {
-      isStatic: true,
-      friction: 0.8,
-      restitution: 0.2,
-      label: 'floor'
+
+    this.add.circle(width * 0.22, height * 0.28, 140, 0xffe7f0, 0.4);
+    this.add.circle(width * 0.78, height * 0.24, 96, 0xd6f0ff, 0.35);
+    this.add.circle(width * 0.5, height * 0.7, 180, 0xf7f4d8, 0.3);
+
+    this.add.text(width * 0.5, height * 0.32, 'CONNECTING', titleStyle).setOrigin(0.5);
+    this.add
+      .text(width * 0.5, height * 0.48, 'A small emotional puzzle about finding a friend.', {
+        fontFamily: 'Helvetica, Arial, sans-serif',
+        fontSize: '18px',
+        color: '#4b4b4b',
+        align: 'center'
+      })
+      .setOrigin(0.5);
+
+    const prompt = this.add
+      .text(width * 0.5, height * 0.72, 'Tap to begin', {
+        fontFamily: 'Helvetica, Arial, sans-serif',
+        fontSize: '18px',
+        color: '#111111',
+        align: 'center'
+      })
+      .setOrigin(0.5);
+
+    this.tweens.add({
+      targets: prompt,
+      alpha: 0.2,
+      duration: 800,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
     });
 
-    this.blobA = new BlobPerson(this, {
-      x: width * 0.34,
-      y: height * 0.42,
-      color: 0xf7c6d5,
-      accent: 0xffb3c7,
-      flip: false,
-      label: 'pinkBlob'
+    this.input.once('pointerdown', () => {
+      this.scene.start('Chapter1Scene');
     });
-
-    this.blobB = new BlobPerson(this, {
-      x: width * 0.66,
-      y: height * 0.44,
-      color: 0xd0e8f9,
-      accent: 0x93c8ff,
-      flip: true,
-      label: 'blueBlob'
-    });
-
-    this.connectionSystem = new ConnectionSystem(this, this.blobA, this.blobB);
-
-    this.matter.add.pointerConstraint({
-      constraint: {
-        stiffness: 0.02,
-        angularStiffness: 0.25,
-        damping: 0.18,
-        render: { visible: false }
-      },
-      label: 'dragConstraint'
-    });
-  }
-
-  update(time: number, delta: number) {
-    this.blobA.update(time, delta);
-    this.blobB.update(time, delta);
-    this.connectionSystem.update(time, delta);
   }
 }
